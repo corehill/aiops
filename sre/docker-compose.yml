@@ -1,10 +1,10 @@
-version: '3'
-
 services:
   go-app:
     image: app:v1
     ports:
       - "8080:8080"
+    environment:
+      - LOG_FORMAT=json
     depends_on:
       - prometheus
 
@@ -26,13 +26,16 @@ services:
 
 
   loki:
-    image: grafana/loki:2.9.6
+    image: grafana/loki:3.0.0
     ports:
       - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yml:/etc/loki/config.yml
+    command: -config.file=/etc/loki/config.yml
 
   promtail:
-    image: grafana/promtail:2.9.6
+    image: grafana/promtail:3.0.0
+    user: root
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./promtail-config.yml:/etc/promtail/config.yml

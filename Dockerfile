@@ -6,6 +6,7 @@ FROM golang:1.25-alpine AS builder
 # 关键配置：启用模块模式 + 配置国内代理
 ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.cn,direct
+ENV LOG_FORMAT=json
 
 # 在容器内创建一个工作目录。
 WORKDIR /app
