@@ -49,6 +49,7 @@ scrape_configs:
             type: type
             tsNs: tsNs
             time: time
+            traceID: traceID
 
 
       # 可选：将解析出的 level 字段映射为 Loki 的日志级别标签（方便查询）

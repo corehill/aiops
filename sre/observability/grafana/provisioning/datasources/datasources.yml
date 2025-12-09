@@ -1,0 +1,61 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus:9090
+    uid: prometheus-ds
+    isDefault: true
+    jsonData:
+      # 启用 exemplar 存储（关键：支持指标→追踪跳转）
+      exemplarStorageEnabled: true
+      # 配置 traceID 关联 Tempo（指标→追踪）
+      exemplarToLogs:
+        datasourceUid: loki-ds
+        query: '{job="go-app"} | regexp "(traceID\":\"([a-f0-9]{32})\")" | $1="{{.traceID}}"'
+        name: "View logs"
+      # 配置 exemplar 到追踪的跳转（指标→追踪）
+      exemplarToTraces:
+        datasourceUid: tempo-ds
+        name: "View trace"
+
+
+
+  - name: Loki
+    type: loki
+    url: http://loki:3100
+    uid: loki-ds
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo-ds
+          matcherRegex: '"traceID"\s*:\s*"([a-f0-9]{32})"'
+          name: TraceID
+          url: '$${__value.raw}'
+          # 注意：url 这里其实不生效，因为 internalLink 才起作用
+          internalLink: true
+
+  - name: Tempo
+    type: tempo
+    url: http://tempo:3200
+    access: proxy
+    uid: tempo-ds
+    jsonData:
+      # 启用与 Loki 的关联（追踪→日志）
+      lokiSearch:
+        datasourceUid: loki-ds
+      # 启用与 Prometheus 的关联（追踪→指标）
+      tracesToMetrics:
+        datasourceUid: prometheus-ds
+        spanStartTimeShift: 5m
+        spanEndTimeShift: 5m
+      # 启用与日志的关联
+      tracesToLogs:
+        datasourceUid: loki-ds
+        spanStartTimeShift: 5m
+        spanEndTimeShift: 5m
+        tags: ['service.name', 'host.name']
+        mappedTags:
+          - key: service.name
+            value: service
+        filterByTraceID: true
+        filterBySpanID: false

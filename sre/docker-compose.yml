@@ -9,7 +9,7 @@ services:
       - prometheus
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.45.3
     ports:
       - "9091:9090"
     volumes:
@@ -37,6 +37,7 @@ services:
     environment:
       - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
     volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
     depends_on:
       - loki

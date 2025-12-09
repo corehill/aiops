@@ -1,6 +1,11 @@
 global:
   scrape_interval: 15s
 
+# 新增：转发指标及 exemplars 到 Tempo
+remote_write:
+  - url: "http://tempo:3200/api/push"  # Tempo 的接收地址
+    send_exemplars: true  # 关键：启用 exemplars 转发
+
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
